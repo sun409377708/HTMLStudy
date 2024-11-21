@@ -113,8 +113,16 @@
         </footer>
     </div>
 
-    <!-- 在 script 标签之前添加 config.js 引用 -->
-    <script src="./config.js"></script>
+    <script>
+        // 直接在这里定义 CONFIG 对象
+        const CONFIG = {
+            API_KEY: "sk-3a810e349bef498c907c5c8bc230a2c1",
+            API_URL: "https://api.deepseek.com/v1/chat/completions",
+            
+            STABILITY_API_KEY: "sk-i4NtUdNf23kuHqNnzs1GNhe41c7nFJSiG3MfcWFVdbKq7Ift",
+            STABILITY_API_ENDPOINT: "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
+        };
+    </script>
 
     <script>
         // 获取DOM元素
