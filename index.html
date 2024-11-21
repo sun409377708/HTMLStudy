@@ -114,7 +114,7 @@
     </div>
 
     <!-- 在 script 标签之前添加 config.js 引用 -->
-    <script src="./config.js"></script>
+    <script src="config.js"></script>
 
     <script>
         // 获取DOM元素
@@ -209,7 +209,7 @@
                     message = '体检报告解读服务包括：\n1. 检查指标说明\n2. 异常项分析\n3. 健康建议\n需要我为您解读哪方面的内容？';
                     break;
                 case '健康档案':
-                    message = '健康档案服务包括：\n1. 个人健康记录\n2. 体检历史查询\n3. 健康趋势分析\n您需要查看哪项内容？';
+                    message = '健康档案服务包括：\n1. 个人健康记录\n2. ���检历史查询\n3. 健康趋势分析\n您需要查看哪项内容？';
                     break;
                 case '症状查询':
                     message = '请描述您的症状，我来为您分析可能的原因和建议。';
@@ -315,7 +315,7 @@
                 imageResult.appendChild(image);
 
             } catch (error) {
-                alert('生成图片时出错：' + error.message);
+                alert('��成图片时出错：' + error.message);
                 console.error('API Error:', error);
             } finally {
                 loadingIndicator.style.display = 'none';
