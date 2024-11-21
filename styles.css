@@ -945,3 +945,77 @@ body {
         color: #fff;
     }
 }
+
+/* 添加历史图片样式 */
+.history-images {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.history-images h3 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.history-image-item {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.history-image-item:hover {
+    transform: scale(1.05);
+}
+
+.history-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.history-image-item:hover .image-info {
+    opacity: 1;
+}
+
+.full-size-image {
+    max-width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .history-images h3 {
+        color: #fff;
+    }
+    
+    .history-images {
+        border-top-color: #404040;
+    }
+}
