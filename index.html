@@ -23,29 +23,66 @@
             <div class="service-menu">
                 <h2>热门服务</h2>
                 <div class="service-grid">
-                    <div class="service-item" data-service="checkup">
+                    <div class="service-item">
                         <div class="service-icon">🏥</div>
                         <span>体检预约</span>
                     </div>
-                    <div class="service-item" data-service="report">
+                    <div class="service-item">
                         <div class="service-icon">📋</div>
                         <span>报告解读</span>
                     </div>
-                    <div class="service-item" data-service="record">
+                    <div class="service-item">
                         <div class="service-icon">❤️</div>
                         <span>健康档案</span>
                     </div>
-                    <div class="service-item" data-service="symptom">
+                    <div class="service-item">
                         <div class="service-icon">🔍</div>
                         <span>症状查询</span>
                     </div>
-                    <div class="service-item" onclick="showImageGenerator()">
+                    <div class="service-item" onclick="toggleImageDropdown()">
                         <div class="service-icon">🎨</div>
                         <span>生成图片</span>
                     </div>
-                    <div class="service-item" onclick="showFoodAnalyzer()">
+                    <div class="service-item" onclick="toggleFoodDropdown()">
                         <div class="service-icon">🍱</div>
                         <span>餐食分析</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="imageDropdown" class="dropdown-menu" style="display: none;">
+                <div class="dropdown-content">
+                    <div class="form-group">
+                        <label>描述你想要的图片</label>
+                        <textarea id="imagePrompt" placeholder="例：一只可爱的小猫在玩毛线球..." rows="3"></textarea>
+                    </div>
+                    <button id="generateBtn" class="submit-btn" onclick="generateImage()">生成图片</button>
+                    <div id="imageResult" class="image-result">
+                        <!-- 生成的图片将显示在这里 -->
+                    </div>
+                    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                        正在生成图片...
+                    </div>
+                </div>
+            </div>
+
+            <div id="foodDropdown" class="dropdown-menu" style="display: none;">
+                <div class="dropdown-content">
+                    <div class="upload-section">
+                        <label for="foodImage" class="upload-label">
+                            <div class="upload-icon">📸</div>
+                            <span>上传食物图片</span>
+                        </label>
+                        <input type="file" id="foodImage" accept="image/*" style="display: none" onchange="analyzeFoodImage(event)">
+                    </div>
+                    <div id="foodImagePreview" class="image-preview"></div>
+                    <div id="foodAnalysisResult" class="food-info" style="display: none;">
+                        <h3>分析结果</h3>
+                        <div class="calories"></div>
+                        <div class="nutrition"></div>
+                    </div>
+                    <div id="foodLoadingIndicator" class="loading-indicator" style="display: none;">
+                        正在分析食物图片...
                     </div>
                 </div>
             </div>
@@ -76,27 +113,480 @@
         </footer>
     </div>
 
-    <!-- 健康档案弹出层 -->
+    <!-- 在 script 标签之前添加 config.js 引用 -->
+    <script src="./config.js"></script>
+
+    <script>
+        // 获取DOM元素
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.querySelector('.send-btn');
+        const chatContainer = document.querySelector('.chat-container');
+        const serviceItems = document.querySelectorAll('.service-item');
+        const questionItems = document.querySelectorAll('.question-item');
+
+        // 修改发送消息函数
+        async function sendMessage(text) {
+            if (!text.trim()) return;
+
+            // 添加用户消息
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user fade-in';
+            userMessage.innerHTML = `
+                <div class="content">${text}</div>
+            `;
+            chatContainer.appendChild(userMessage);
+
+            // 添加AI思考状态
+            const aiMessage = document.createElement('div');
+            aiMessage.className = 'message assistant fade-in';
+            aiMessage.innerHTML = `
+                <div class="avatar">AI</div>
+                <div class="content typing-dots">思考中...</div>
+            `;
+            chatContainer.appendChild(aiMessage);
+
+            // 滚动到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            try {
+                // 调用 deepseek API 获取回复
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",  // 使用 deepseek 模型
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一个专业的健康顾问，请用简短友好的方式回答用户的健康相关问题。请用中文回答。"
+                            },
+                            {
+                                role: "user",
+                                content: text
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiReply = data.choices[0].message.content;
+
+                // 更新 AI 回复内容
+                aiMessage.innerHTML = `
+                    <div class="avatar">AI</div>
+                    <div class="content">${aiReply}</div>
+                `;
+            } catch (error) {
+                // 如果出错，显示错误信息
+                aiMessage.innerHTML = `
+                    <div class="avatar">AI</div>
+                    <div class="content">抱歉，我遇到了一些问题：${error.message}</div>
+                `;
+                console.error('API Error:', error);
+            }
+
+            // 清空输入框
+            messageInput.value = '';
+        }
+
+        // 处理服务项点击
+        function handleServiceClick(serviceName) {
+            let message = '';
+            switch(serviceName) {
+                case '体检预约':
+                    message = '体检预约服务包括：\n1. 个性化体检套餐推荐\n2. 专家门诊预约\n3. 体检排\n您想了解哪项具体服务？';
+                    break;
+                case '报告解读':
+                    message = '体检报告解读服务包括：\n1. 检查指标说明\n2. 异常项分析\n3. 健康建议\n需要我为您解读哪方面的内容？';
+                    break;
+                case '健康档案':
+                    message = '健康档案服务包括：\n1. 个人健康记录\n2. 体检历史查询\n3. 健康趋势分析\n您需要查看哪项内容？';
+                    break;
+                case '症状查询':
+                    message = '请描述您的症状，我来为您分析可能的原因和建议。';
+                    break;
+                default:
+                    message = '您择了' + serviceName + '服务请问有什么可以帮您？';
+            }
+            sendMessage(message);
+        }
+
+        // 绑定发送按钮点击事件
+        sendButton.addEventListener('click', () => {
+            sendMessage(messageInput.value);
+        });
+
+        // 绑定输入框回车事件
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage(messageInput.value);
+            }
+        });
+
+        // 修改服务项点击事件绑定
+        serviceItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const serviceName = item.querySelector('span').textContent;
+                // 如果是生成图片、餐食分析或健康档案服务，不触发问答
+                if (serviceName === '生成图片' || 
+                    serviceName === '餐食分析' || 
+                    serviceName === '健康档案') {
+                    return; // 直接返回，不执行handleServiceClick
+                }
+                
+                handleServiceClick(serviceName);
+                
+                // 添加点击效果
+                item.classList.add('service-active');
+                setTimeout(() => {
+                    item.classList.remove('service-active');
+                }, 200);
+            });
+        });
+
+        // 绑定问题按钮点击事件
+        questionItems.forEach(button => {
+            button.addEventListener('click', () => {
+                sendMessage(button.textContent);
+            });
+        });
+
+        // 添加图片生成功能
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value;
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const imageResult = document.getElementById('imageResult');
+            
+            if (!prompt) {
+                alert('请输入图片描述');
+                return;
+            }
+
+            try {
+                loadingIndicator.style.display = 'block';
+                imageResult.innerHTML = '';
+
+                const response = await fetch(CONFIG.STABILITY_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.STABILITY_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        text_prompts: [
+                            {
+                                text: prompt,
+                                weight: 1
+                            }
+                        ],
+                        cfg_scale: 7,
+                        clip_guidance_preset: "FAST_BLUE",
+                        height: 1024,
+                        width: 1024,
+                        samples: 1,
+                        steps: 30,
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`图片生成失败: ${errorData.message || '未知错误'}`);
+                }
+
+                const result = await response.json();
+                
+                // 检查返回的数据结构
+                if (!result.artifacts || !result.artifacts[0]) {
+                    throw new Error('返回的数据格式不正确');
+                }
+
+                const image = document.createElement('img');
+                image.src = `data:image/png;base64,${result.artifacts[0].base64}`;
+                imageResult.appendChild(image);
+
+            } catch (error) {
+                alert('生成图片时出错：' + error.message);
+                console.error('API Error:', error);
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // 添加下拉框控制函数
+        function toggleImageDropdown() {
+            const dropdown = document.getElementById('imageDropdown');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                setTimeout(() => dropdown.classList.add('show'), 10);
+            } else {
+                dropdown.classList.remove('show');
+                setTimeout(() => dropdown.style.display = 'none', 300);
+            }
+        }
+
+        // 点击其他地方关闭下拉框
+        document.addEventListener('click', function(event) {
+            const imageDropdown = document.getElementById('imageDropdown');
+            const foodDropdown = document.getElementById('foodDropdown');
+            const serviceItem = event.target.closest('.service-item');
+            
+            if (!serviceItem && !event.target.closest('.dropdown-menu')) {
+                if (imageDropdown.style.display !== 'none') {
+                    imageDropdown.classList.remove('show');
+                    setTimeout(() => imageDropdown.style.display = 'none', 300);
+                }
+                if (foodDropdown.style.display !== 'none') {
+                    foodDropdown.classList.remove('show');
+                    setTimeout(() => foodDropdown.style.display = 'none', 300);
+                }
+            }
+        });
+
+        // 将函数暴露到全局作用域
+        window.generateImage = generateImage;
+        window.toggleImageDropdown = toggleImageDropdown;
+
+        // 添加健康档案相关函数
+        function showHealthRecord() {
+            document.getElementById('healthRecordModal').style.display = 'block';
+        }
+
+        function closeHealthRecord() {
+            document.getElementById('healthRecordModal').style.display = 'none';
+        }
+
+        function switchTab(tabId) {
+            // 切换标签页样式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 切换内容显示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function saveHealthRecord(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const record = Object.fromEntries(formData.entries());
+            
+            // 添加时间戳
+            record.timestamp = new Date().toISOString();
+            
+            // 获取已存储的记录
+            let records = JSON.parse(localStorage.getItem('healthRecords') || '[]');
+            records.push(record);
+            
+            // 保存到本地存储
+            localStorage.setItem('healthRecords', JSON.stringify(records));
+            
+            // 更新历史记录显示
+            updateHistoryList();
+            
+            // 重置表单
+            form.reset();
+            
+            // 显示成功消息
+            alert('健康档案保存成功！');
+        }
+
+        function updateHistoryList() {
+            const historyList = document.querySelector('.history-list');
+            const records = JSON.parse(localStorage.getItem('healthRecords') || '[]');
+            
+            historyList.innerHTML = records.map((record, index) => `
+                <div class="history-item">
+                    <div class="history-header">
+                        <h3>${record.name} 的健康档案</h3>
+                        <span>${new Date(record.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div class="history-details">
+                        <p>年龄：${record.age}岁 | 性别：${record.gender === 'male' ? '男' : '女'}</p>
+                        <p>身高：${record.height}cm | 体重：${record.weight}kg | 血压：${record.bloodPressure || '未填写'}</p>
+                        <p>既往病史：${record.medicalHistory || '无'}</p>
+                        <p>用药记录：${record.medication || '无'}</p>
+                    </div>
+                    <button class="delete-btn" onclick="deleteRecord(${index})">删除记录</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteRecord(index) {
+            if (confirm('确定要删除这条记录吗？')) {
+                let records = JSON.parse(localStorage.getItem('healthRecords') || '[]');
+                records.splice(index, 1);
+                localStorage.setItem('healthRecords', JSON.stringify(records));
+                updateHistoryList();
+            }
+        }
+
+        // 修改健康档案服务项的点击事件
+        document.querySelector('.service-item:nth-child(3)').onclick = showHealthRecord;
+
+        // 页面加载时初始化历史记录
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHistoryList();
+        });
+
+        // 添加餐食分析相关函数
+        function toggleFoodDropdown() {
+            const dropdown = document.getElementById('foodDropdown');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                setTimeout(() => dropdown.classList.add('show'), 10);
+            } else {
+                dropdown.classList.remove('show');
+                setTimeout(() => dropdown.style.display = 'none', 300);
+            }
+        }
+
+        // 点击其他地方关闭下拉框
+        document.addEventListener('click', function(event) {
+            const foodDropdown = document.getElementById('foodDropdown');
+            const serviceItem = event.target.closest('.service-item');
+            if (!serviceItem && !event.target.closest('.dropdown-menu')) {
+                foodDropdown.classList.remove('show');
+                setTimeout(() => foodDropdown.style.display = 'none', 300);
+            }
+        });
+
+        async function analyzeFoodImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const preview = document.getElementById('foodImagePreview');
+            const result = document.getElementById('foodAnalysisResult');
+            const loadingIndicator = document.getElementById('foodLoadingIndicator');
+
+            try {
+                // 显示预览图片
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.className = 'preview-image';
+                preview.appendChild(img);
+
+                // 显示加载状态
+                loadingIndicator.style.display = 'block';
+                result.style.display = 'none';
+
+                // 将图片转换为 base64
+                const base64Image = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                });
+
+                // 调用 deepseek API 分析图片
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一个专业的营养师，请分析图片中的食物，给出大致的热量和营养成分信息。请用中文回答，并按照以下格式输出：热量：xxx卡路里\n蛋白质：xxx克\n碳水：xxx克\n脂肪：xxx克\n建议：xxx"
+                            },
+                            {
+                                role: "user",
+                                content: `请分析这张食物图片：${base64Image}`
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('分析失败');
+                }
+
+                const data = await response.json();
+                const analysisText = data.choices[0].message.content;
+
+                // 解析返回的文本
+                const calories = analysisText.match(/热量：(.*?)卡路里/)?.[1] || '未知';
+                const protein = analysisText.match(/蛋白质：(.*?)克/)?.[1] || '未知';
+                const carbs = analysisText.match(/碳水：(.*?)克/)?.[1] || '未知';
+                const fat = analysisText.match(/脂肪：(.*?)克/)?.[1] || '未知';
+                const suggestion = analysisText.match(/建议：(.*)/)?.[1] || '无具体建议';
+
+                // 显示分析结果
+                result.style.display = 'block';
+                result.innerHTML = `
+                    <h3>分析结果</h3>
+                    <div class="calories">
+                        预估热量：${calories} 千卡
+                    </div>
+                    <div class="nutrition">
+                        <div>蛋白质：${protein}g</div>
+                        <div>碳水：${carbs}g</div>
+                        <div>脂肪：${fat}g</div>
+                    </div>
+                    <div class="suggestions">
+                        <p>建议：${suggestion}</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                result.style.display = 'block';
+                result.innerHTML = `
+                    <h3>分析结果</h3>
+                    <div class="error-message">
+                        抱歉，分析出错：${error.message}
+                    </div>
+                `;
+                console.error('分析错误:', error);
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // 将函数暴露到全局作用域
+        window.toggleFoodDropdown = toggleFoodDropdown;
+        window.analyzeFoodImage = analyzeFoodImage;
+    </script>
+
+    <!-- 在 body 标签结束前添加健康档案弹窗 -->
     <div id="healthRecordModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>健康档案</h2>
-                <span class="close-btn">&times;</span>
+                <span class="close-btn" onclick="closeHealthRecord()">&times;</span>
             </div>
             
             <div class="modal-tabs">
-                <button class="tab-btn active" data-tab="newRecord">新建档案</button>
-                <button class="tab-btn" data-tab="history">历史记录</button>
+                <button class="tab-btn active" onclick="switchTab('newRecord')">新建档案</button>
+                <button class="tab-btn" onclick="switchTab('history')">历史记录</button>
             </div>
 
             <!-- 新建档案表单 -->
             <div class="tab-content active" id="newRecord">
-                <form id="healthRecordForm">
+                <form id="healthRecordForm" onsubmit="saveHealthRecord(event)">
                     <div class="form-group">
                         <label>基本信息</label>
-                        <input type="text" placeholder="姓名" name="name">
-                        <input type="number" placeholder="年龄" name="age">
-                        <select name="gender">
+                        <input type="text" placeholder="姓名" name="name" required>
+                        <input type="number" placeholder="年龄" name="age" required>
+                        <select name="gender" required>
                             <option value="">选择性别</option>
                             <option value="male">男</option>
                             <option value="female">女</option>
@@ -106,9 +596,9 @@
                     <div class="form-group">
                         <label>身体状况</label>
                         <div class="health-metrics">
-                            <input type="number" placeholder="身高(cm)" name="height">
-                            <input type="number" placeholder="体重(kg)" name="weight">
-                            <input type="number" placeholder="血压" name="bloodPressure">
+                            <input type="number" placeholder="身高(cm)" name="height" required>
+                            <input type="number" placeholder="体重(kg)" name="weight" required>
+                            <input type="text" placeholder="血压" name="bloodPressure">
                         </div>
                     </div>
 
@@ -134,69 +624,5 @@
             </div>
         </div>
     </div>
-
-    <!-- 图片生成器弹窗 -->
-    <div id="imageGeneratorModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>AI 图片生成</h2>
-                <span class="close-btn" onclick="closeImageGenerator()">&times;</span>
-            </div>
-            <div class="image-generator-content">
-                <div class="model-selector">
-                    <label>选择模型</label>
-                    <div class="model-options">
-                        <button class="model-btn active" data-model="stability">Stability AI</button>
-                        <button class="model-btn" data-model="claude">Claude</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>描述你想要的图片</label>
-                    <textarea id="imagePrompt" placeholder="例：一只可爱的小猫在玩毛线球..." rows="3"></textarea>
-                </div>
-                <button id="generateBtn" class="submit-btn" onclick="generateImage()">生成图片</button>
-                <div id="imageResult" class="image-result">
-                    <!-- 生成的图片将显示在这里 -->
-                </div>
-                <div id="loadingIndicator" class="loading-indicator" style="display: none;">
-                    正在生成图片...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 餐食分析弹窗 -->
-    <div id="foodAnalyzerModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>餐食分析</h2>
-                <span class="close-btn" onclick="closeFoodAnalyzer()">&times;</span>
-            </div>
-            <div class="food-analyzer-content">
-                <div class="upload-section">
-                    <label for="foodImage" class="upload-label">
-                        <div class="upload-icon">📸</div>
-                        <span>上传食物图片</span>
-                    </label>
-                    <input type="file" id="foodImage" accept="image/*" style="display: none" onchange="handleFoodImage(event)">
-                </div>
-                <div class="style-selector">
-                    <label class="style-toggle">
-                        <input type="checkbox" id="animeStyle" checked>
-                        <span class="toggle-label">生成动画风格图片</span>
-                    </label>
-                </div>
-                <div id="originalImagePreview" class="image-preview"></div>
-                <div id="foodAnalysisResult" class="analysis-result"></div>
-                <div id="animeImageResult" class="image-result"></div>
-                <div id="foodLoadingIndicator" class="loading-indicator" style="display: none;">
-                    分析中...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="./config.demo.js"></script>
-    <script src="./app.js"></script>
 </body>
 </html> 

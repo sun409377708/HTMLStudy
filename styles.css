@@ -408,45 +408,66 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
 }
 
 .modal-content {
-    position: relative;
-    background-color: #fff;
-    margin: 20px auto;
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    width: 80%;
     max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.modal-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-radius: 8px;
+    position: relative;
 }
 
 .close-btn {
-    font-size: 24px;
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    color: #333;
     cursor: pointer;
-    color: #666;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    border: 1px solid #ddd;
 }
 
 .close-btn:hover {
-    color: #000;
+    background-color: #ff4444;
+    color: white;
+    transform: rotate(90deg);
+    border-color: #ff4444;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .close-btn {
+        color: #fff;
+        background-color: #333;
+        border-color: #404040;
+    }
+    
+    .close-btn:hover {
+        background-color: #ff4444;
+        color: white;
+        border-color: #ff4444;
+    }
 }
 
 /* 标签页样式 */
 .modal-tabs {
     display: flex;
-    padding: 15px 20px;
+    gap: 10px;
+    padding: 15px;
     border-bottom: 1px solid #eee;
-    background: #f8fbff;
 }
 
 .tab-btn {
@@ -454,9 +475,8 @@ body {
     border: none;
     background: none;
     cursor: pointer;
+    border-radius: 4px;
     color: #666;
-    font-weight: 500;
-    border-radius: 6px;
 }
 
 .tab-btn.active {
@@ -464,7 +484,6 @@ body {
     color: white;
 }
 
-/* 表单样式 */
 .tab-content {
     display: none;
     padding: 20px;
@@ -501,21 +520,6 @@ body {
     gap: 10px;
 }
 
-.submit-btn {
-    width: 100%;
-    padding: 12px;
-    background-color: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.submit-btn:hover {
-    background-color: #1976D2;
-}
-
-/* 历史记录样式 */
 .history-item {
     background-color: #f8fbff;
     border-radius: 8px;
@@ -552,29 +556,6 @@ body {
 
 /* 深色模式适配 */
 @media (prefers-color-scheme: dark) {
-    .modal-content {
-        background-color: #1e1e1e;
-    }
-
-    .modal-header,
-    .modal-tabs {
-        border-color: #333;
-        background-color: #1a2635;
-    }
-
-    .form-group label,
-    .history-header h3 {
-        color: #fff;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        background-color: #2d2d2d;
-        border-color: #404040;
-        color: #fff;
-    }
-
     .history-item {
         background-color: #2d2d2d;
         border-color: #404040;
@@ -584,7 +565,15 @@ body {
         color: #bbb;
     }
 
-    .close-btn {
+    .form-group label {
+        color: #fff;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        background-color: #2d2d2d;
+        border-color: #404040;
         color: #fff;
     }
 }
@@ -825,6 +814,134 @@ body {
 /* 深色模式适配 */
 @media (prefers-color-scheme: dark) {
     .toggle-label {
+        color: #fff;
+    }
+}
+
+/* 图片生成器样式 */
+.model-options {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.model-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.model-btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* 加载指示器 */
+.loading-indicator {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+/* 图片结果 */
+.image-result img {
+    max-width: 100%;
+    margin-top: 20px;
+}
+
+/* 修改下拉框样式 */
+.dropdown-menu {
+    position: absolute;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+    margin: 8px auto;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 60px; /* 调整到屏幕上方 */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    top: 80px; /* 显示时的位置 */
+}
+
+/* 添加遮罩层效果 */
+.dropdown-menu::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dropdown-menu.show::before {
+    opacity: 1;
+}
+
+.dropdown-content {
+    padding: 10px;
+}
+
+.dropdown-content textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 10px 0;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.dropdown-content label {
+    color: #333;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.dropdown-content .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.dropdown-content .submit-btn:hover {
+    background-color: #1976D2;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .dropdown-menu {
+        background-color: #1e1e1e;
+    }
+
+    .dropdown-content textarea {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #fff;
+    }
+
+    .dropdown-content label {
         color: #fff;
     }
 }

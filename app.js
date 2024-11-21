@@ -129,7 +129,7 @@ function showServiceInfo(type) {
         case 'report':
             message = `体检报告解读服务包括：
 1. 检查指标说明
-2. 异常��标分析
+2. 异常标分析
 3. 健康风险评估
 4. 专家在线咨询
 5. 个性化健康建议
@@ -150,196 +150,130 @@ function showServiceInfo(type) {
     sendMessage(message);
 }
 
-// 图片生成函数
+// AI 功能实现
 async function generateImage() {
     const prompt = document.getElementById('imagePrompt').value;
-    const selectedModel = document.querySelector('.model-btn.active').dataset.model;
     const loadingIndicator = document.getElementById('loadingIndicator');
     const imageResult = document.getElementById('imageResult');
-
+    
     if (!prompt) {
         alert('请输入图片描述');
         return;
     }
 
-    loadingIndicator.style.display = 'block';
-    imageResult.innerHTML = '';
-
     try {
-        let imageUrl;
-        if (selectedModel === 'claude') {
-            imageUrl = await generateImageWithClaude(prompt);
-        } else {
-            // 原有的 Stability AI 处理逻辑
-            imageUrl = await generateImageWithStability(prompt);
-        }
+        loadingIndicator.style.display = 'block';
+        imageResult.innerHTML = '';
 
-        const img = document.createElement('img');
-        img.src = imageUrl;
-        imageResult.appendChild(img);
-    } catch (error) {
-        alert('生成图片失败：' + error.message);
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
+        const selectedModel = document.querySelector('.model-btn.active').dataset.model;
+        const apiKey = selectedModel === 'stability' ? CONFIG.STABILITY_API_KEY : CONFIG.CLAUDE_API_KEY;
+        const apiEndpoint = selectedModel === 'stability' ? CONFIG.STABILITY_API_ENDPOINT : CONFIG.CLAUDE_API_ENDPOINT;
 
-// 添加 Claude API 处理函数
-async function generateImageWithClaude(prompt) {
-    try {
-        const response = await fetch(CONFIG.CLAUDE_API_URL, {
+        const response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': CONFIG.CLAUDE_API_KEY,
-                'anthropic-version': '2023-06-01'
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'claude-3-opus-20240229',
-                max_tokens: 1024,
-                messages: [{
-                    role: 'user',
-                    content: `请根据以下描述生成图片：${prompt}`
-                }]
+                text_prompts: [{ text: prompt }],
+                cfg_scale: 7,
+                height: 512,
+                width: 512,
+                steps: 30,
+                samples: 1,
             })
         });
 
         if (!response.ok) {
-            throw new Error('Claude API 请求失败');
+            throw new Error('图片生成失败');
         }
 
-        const data = await response.json();
-        return data.content[0].text;
+        const result = await response.json();
+        const image = document.createElement('img');
+        image.src = `data:image/png;base64,${result.artifacts[0].base64}`;
+        imageResult.appendChild(image);
     } catch (error) {
-        console.error('Claude API 错误:', error);
-        throw error;
+        alert('生成图片时出错：' + error.message);
+    } finally {
+        loadingIndicator.style.display = 'none';
     }
 }
 
-// 处理食物图片上传
+// 餐食分析功能
 async function handleFoodImage(event) {
     const file = event.target.files[0];
+    const preview = document.getElementById('originalImagePreview');
+    const analysisResult = document.getElementById('foodAnalysisResult');
+    const loadingIndicator = document.getElementById('foodLoadingIndicator');
+
     if (!file) return;
 
-    const loadingIndicator = document.getElementById('foodLoadingIndicator');
-    const analysisResult = document.getElementById('foodAnalysisResult');
-    const animeImageResult = document.getElementById('animeImageResult');
-    const originalPreview = document.getElementById('originalImagePreview');
-
     try {
-        // 将图片转换为base64
-        const base64Image = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-        });
+        // 显示原始图片
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" alt="食物图片">`;
+        }
+        reader.readAsDataURL(file);
 
-        // 显示原始图片预览
-        originalPreview.innerHTML = `<img src="${base64Image}" class="preview-image">`;
-
+        // 分析图片
         loadingIndicator.style.display = 'block';
-        loadingIndicator.textContent = '分析中...';
-        analysisResult.innerHTML = '';
-        animeImageResult.innerHTML = '';
+        const formData = new FormData();
+        formData.append('image', file);
 
-        // 使用 DeepSeek API 识别食物
-        const recognitionResponse = await fetch(API_URL, {
+        const response = await fetch('/analyze-food', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "deepseek-chat",
-                messages: [{
-                    role: "system",
-                    content: "你是一个专业的食物识别和营养分析专家。请仔细观察图片中的食物，准确识别它是什么，并提供营养信息。请严格按照以下JSON格式返回：{\"name\":\"食物名称\",\"calories\":\"卡路里\",\"protein\":\"蛋白质(g)\",\"carbs\":\"碳水(g)\",\"fat\":\"脂肪(g)\"}。对于水果、蔬菜等常见食物，请提供真实的营养数据。只返回JSON数据，不要包含任何其他字符。"
-                }, {
-                    role: "user",
-                    content: `这是一张食物图片的base64编码：${base64Image}，请识别图中的食物并提供准确的营养信息。`
-                }],
-                temperature: 0.3
-            })
+            body: formData
         });
 
-        const recognitionData = await recognitionResponse.json();
-        console.log('Recognition Response:', recognitionData);
-
-        const foodData = JSON.parse(recognitionData.choices[0].message.content.trim());
-
-        // 检查是否需要生成动画风格图片
-        const generateAnime = document.getElementById('animeStyle').checked;
-
-        if (generateAnime) {
-            // 使用 Stability AI 生成动画风格图片
-            loadingIndicator.textContent = '生成动画风格图片...';
-            const animeResponse = await fetch(
-                'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${STABILITY_API_KEY}`,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        text_prompts: [
-                            {
-                                text: `cute anime style illustration of ${foodData.name}, food illustration, kawaii style, vibrant colors, detailed, appetizing, top view, food photography style`,
-                                weight: 1
-                            },
-                            {
-                                text: "realistic, photograph, 3d rendering, low quality, blurry",
-                                weight: -1
-                            }
-                        ],
-                        cfg_scale: 8,
-                        height: 1024,
-                        width: 1024,
-                        samples: 1,
-                        steps: 40,
-                        style_preset: "anime"
-                    })
-                }
-            );
-
-            if (!animeResponse.ok) {
-                throw new Error('动画生成失败');
-            }
-
-            const responseData = await animeResponse.json();
-            const imageUrl = `data:image/png;base64,${responseData.artifacts[0].base64}`;
-
-            // 显示生成的动画图片
-            const animeImage = document.createElement('img');
-            animeImage.src = imageUrl;
-            animeImage.className = 'generated-image';
-            animeImageResult.appendChild(animeImage);
+        if (!response.ok) {
+            throw new Error('分析失败');
         }
 
-        // 显示分析结果
+        const result = await response.json();
         analysisResult.innerHTML = `
-            <div class="food-info">
-                <h3>${foodData.name}</h3>
-                <div class="calories">🔥 ${foodData.calories} 卡路里</div>
-                <div class="nutrition">
-                    <div>蛋白质: ${foodData.protein}g</div>
-                    <div>碳水: ${foodData.carbs}g</div>
-                    <div>脂肪: ${foodData.fat}g</div>
-                </div>
-            </div>
+            <h3>分析结果</h3>
+            <p>卡路里：${result.calories} kcal</p>
+            <p>营养成分：${result.nutrition}</p>
+            <p>建议：${result.suggestions}</p>
         `;
-
     } catch (error) {
-        console.error('Error:', error);
-        analysisResult.innerHTML = `
-            <div class="error-message">
-                分析失败，请重试<br>
-                ${error.message}
-            </div>
-        `;
+        alert('分析图片时出错：' + error.message);
     } finally {
         loadingIndicator.style.display = 'none';
+    }
+}
+
+// 模态框控制
+function showImageGenerator() {
+    document.getElementById('imageGeneratorModal').style.display = 'block';
+}
+
+function closeImageGenerator() {
+    document.getElementById('imageGeneratorModal').style.display = 'none';
+}
+
+function showFoodAnalyzer() {
+    document.getElementById('foodAnalyzerModal').style.display = 'block';
+}
+
+function closeFoodAnalyzer() {
+    document.getElementById('foodAnalyzerModal').style.display = 'none';
+}
+
+// 模型选择
+document.querySelectorAll('.model-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelector('.model-btn.active').classList.remove('active');
+        this.classList.add('active');
+    });
+});
+
+// 关闭模态框的点击事件
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
     }
 }
 
