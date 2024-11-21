@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康智能管家</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>健康智能管家</h1>
+        </header>
+
+        <main class="chat-container">
+            <div class="message assistant">
+                <div class="avatar">AI</div>
+                <div class="content">
+                    您好！我是您的健康智能管家，可以为您提供体检、健康咨询等服务，请问有什么可以帮您？
+                </div>
+            </div>
+
+            <div class="service-menu">
+                <h2>热门服务</h2>
+                <div class="service-grid">
+                    <div class="service-item" data-service="checkup">
+                        <div class="service-icon">🏥</div>
+                        <span>体检预约</span>
+                    </div>
+                    <div class="service-item" data-service="report">
+                        <div class="service-icon">📋</div>
+                        <span>报告解读</span>
+                    </div>
+                    <div class="service-item" data-service="record">
+                        <div class="service-icon">❤️</div>
+                        <span>健康档案</span>
+                    </div>
+                    <div class="service-item" data-service="symptom">
+                        <div class="service-icon">🔍</div>
+                        <span>症状查询</span>
+                    </div>
+                    <div class="service-item" onclick="showImageGenerator()">
+                        <div class="service-icon">🎨</div>
+                        <span>生成图片</span>
+                    </div>
+                    <div class="service-item" onclick="showFoodAnalyzer()">
+                        <div class="service-icon">🍱</div>
+                        <span>餐食分析</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-questions">
+                <h2>常见问题</h2>
+                <div class="question-grid">
+                    <button class="question-item">体检前需要注意什么？</button>
+                    <button class="question-item">如何解读体检报告？</button>
+                    <button class="question-item">推荐适合我的体检套餐</button>
+                    <button class="question-item">最近体检优惠活动</button>
+                </div>
+            </div>
+
+            <div class="health-tips">
+                <h2>健康小贴士</h2>
+                <div class="tips-content">
+                    定期体检是预防疾病的重要手段，建议每年进行一次全面体检。
+                </div>
+            </div>
+        </main>
+
+        <footer class="input-container">
+            <div class="input-wrapper">
+                <input type="text" id="messageInput" placeholder="请输入您的健康问题...">
+                <button class="send-btn">发送</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 健康档案弹出层 -->
+    <div id="healthRecordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>健康档案</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="newRecord">新建档案</button>
+                <button class="tab-btn" data-tab="history">历史记录</button>
+            </div>
+
+            <!-- 新建档案表单 -->
+            <div class="tab-content active" id="newRecord">
+                <form id="healthRecordForm">
+                    <div class="form-group">
+                        <label>基本信息</label>
+                        <input type="text" placeholder="姓名" name="name">
+                        <input type="number" placeholder="年龄" name="age">
+                        <select name="gender">
+                            <option value="">选择性别</option>
+                            <option value="male">男</option>
+                            <option value="female">女</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>身体状况</label>
+                        <div class="health-metrics">
+                            <input type="number" placeholder="身高(cm)" name="height">
+                            <input type="number" placeholder="体重(kg)" name="weight">
+                            <input type="number" placeholder="血压" name="bloodPressure">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>既往病史</label>
+                        <textarea name="medicalHistory" placeholder="请填写既往病史..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>用药记录</label>
+                        <textarea name="medication" placeholder="请填写正在服用的药物..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">保存档案</button>
+                </form>
+            </div>
+
+            <!-- 历史记录页面 -->
+            <div class="tab-content" id="history">
+                <div class="history-list">
+                    <!-- 历史记录将通过 JavaScript 动态添加 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片生成器弹窗 -->
+    <div id="imageGeneratorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI 图片生成</h2>
+                <span class="close-btn" onclick="closeImageGenerator()">&times;</span>
+            </div>
+            <div class="image-generator-content">
+                <div class="model-selector">
+                    <label>选择模型</label>
+                    <div class="model-options">
+                        <button class="model-btn active" data-model="stability">Stability AI</button>
+                        <button class="model-btn" data-model="claude">Claude</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述你想要的图片</label>
+                    <textarea id="imagePrompt" placeholder="例：一只可爱的小猫在玩毛线球..." rows="3"></textarea>
+                </div>
+                <button id="generateBtn" class="submit-btn" onclick="generateImage()">生成图片</button>
+                <div id="imageResult" class="image-result">
+                    <!-- 生成的图片将显示在这里 -->
+                </div>
+                <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                    正在生成图片...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 餐食分析弹窗 -->
+    <div id="foodAnalyzerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>餐食分析</h2>
+                <span class="close-btn" onclick="closeFoodAnalyzer()">&times;</span>
+            </div>
+            <div class="food-analyzer-content">
+                <div class="upload-section">
+                    <label for="foodImage" class="upload-label">
+                        <div class="upload-icon">📸</div>
+                        <span>上传食物图片</span>
+                    </label>
+                    <input type="file" id="foodImage" accept="image/*" style="display: none" onchange="handleFoodImage(event)">
+                </div>
+                <div class="style-selector">
+                    <label class="style-toggle">
+                        <input type="checkbox" id="animeStyle" checked>
+                        <span class="toggle-label">生成动画风格图片</span>
+                    </label>
+                </div>
+                <div id="originalImagePreview" class="image-preview"></div>
+                <div id="foodAnalysisResult" class="analysis-result"></div>
+                <div id="animeImageResult" class="image-result"></div>
+                <div id="foodLoadingIndicator" class="loading-indicator" style="display: none;">
+                    分析中...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 

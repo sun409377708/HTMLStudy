@@ -1,0 +1,830 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f5f5f5;
+    height: 100vh;
+}
+
+.app-container {
+    max-width: 600px;
+    height: 100vh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+/* 顶部导航样式 */
+.header {
+    background-color: #2196F3;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* 聊天区域样式 */
+.chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background-color: #f5f5f5;
+}
+
+/* 消息样式 */
+.message {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: flex-start;
+}
+
+.message .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #2196F3;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.message .content {
+    max-width: 70%;
+    padding: 12px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.message.assistant .content {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+}
+
+.message.user {
+    flex-direction: row-reverse;
+}
+
+.message.user .content {
+    background-color: #2196F3;
+    color: white;
+}
+
+/* 猜你想问区域样式 */
+.quick-questions {
+    background-color: #f8fbff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 12px;
+}
+
+.quick-questions h2 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.question-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.question-item {
+    padding: 12px;
+    background-color: #ffffff;
+    border: 1px solid #e3f2fd;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 3px solid #2196F3;
+}
+
+.question-item:hover {
+    background-color: #E3F2FD;
+    transform: translateX(5px);
+}
+
+/* 底部输入区域样式 */
+.input-container {
+    padding: 10px 15px;
+    background-color: #fff;
+    border-top: 1px solid #e0e0e0;
+    position: sticky;
+    bottom: 0;
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+#messageInput {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 15px;
+    outline: none;
+}
+
+.send-btn {
+    padding: 0 20px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.send-btn:hover {
+    background-color: #1976D2;
+}
+
+/* 适配安全区域 */
+@supports (padding: max(0px)) {
+    .input-container {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+}
+
+/* 服务菜单样式 */
+.service-menu {
+    background-color: #f8fbff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(33, 150, 243, 0.08);
+}
+
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.service-item {
+    position: relative;
+    overflow: hidden;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 15px 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e3f2fd;
+}
+
+.service-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+}
+
+.service-item:hover::before {
+    transform: translateX(100%);
+    transition: transform 0.6s;
+}
+
+.service-active {
+    transform: scale(0.95);
+    transition: transform 0.2s;
+}
+
+.service-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    transition: transform 0.3s;
+}
+
+.service-item:hover .service-icon {
+    transform: scale(1.1);
+}
+
+.service-item span {
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+}
+
+/* 健康小贴士样式 */
+.health-tips {
+    background-color: #E3F2FD;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 12px;
+    border-left: 4px solid #2196F3;
+}
+
+.health-tips h2 {
+    color: #1976D2;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.tips-content {
+    color: #0D47A1;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 优化问题按钮样式 */
+.question-item {
+    border-left: 3px solid #2196F3;
+    background-color: #f5f5f5;
+    transition: all 0.3s ease;
+}
+
+.question-item:hover {
+    background-color: #E3F2FD;
+    transform: translateX(5px);
+}
+
+/* 修改深色模式样式 */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #121212;
+        color: #ffffff;
+    }
+    
+    .app-container {
+        background-color: #1e1e1e;
+    }
+    
+    .message.assistant .content {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #ffffff;
+    }
+
+    .message.user .content {
+        background-color: #2196F3;
+        color: #ffffff;
+    }
+    
+    .service-menu,
+    .quick-questions {
+        background-color: #1a2635;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .service-item span {
+        color: #ffffff;
+    }
+
+    .service-item:hover {
+        background-color: #383838;
+    }
+
+    .question-item {
+        background-color: #2d2d2d;
+        color: #ffffff;
+        border-left: 3px solid #2196F3;
+    }
+
+    .question-item:hover {
+        background-color: #383838;
+    }
+    
+    .health-tips {
+        background-color: #0D47A1;
+        border-left: 4px solid #2196F3;
+    }
+    
+    .tips-content,
+    .health-tips h2 {
+        color: #ffffff;
+    }
+
+    #messageInput {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #ffffff;
+    }
+
+    #messageInput::placeholder {
+        color: #888888;
+    }
+
+    .input-container {
+        background-color: #1e1e1e;
+        border-top-color: #404040;
+    }
+
+    h1, h2 {
+        color: #ffffff;
+    }
+
+    .service-item {
+        background-color: #2d2d2d;
+    }
+    
+    .service-item span {
+        color: #fff;
+    }
+    
+    .service-item::before {
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+    }
+}
+
+/* 消息渐入动画 */
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 加载动画 */
+.typing-dots::after {
+    content: '';
+    animation: typingDots 1.5s infinite;
+}
+
+@keyframes typingDots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+    100% { content: ''; }
+}
+
+/* 优化消息内容显示 */
+.message .content {
+    word-break: break-word;
+    transition: all 0.3s ease;
+}
+
+/* 优化点击反馈 */
+.service-item:active,
+.question-item:active {
+    transform: scale(0.98);
+}
+
+/* 输入框焦点效果 */
+#messageInput:focus {
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 20px auto;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-btn {
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+/* 标签页样式 */
+.modal-tabs {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    background: #f8fbff;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #666;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.tab-btn.active {
+    background-color: #2196F3;
+    color: white;
+}
+
+/* 表单样式 */
+.tab-content {
+    display: none;
+    padding: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.health-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background-color: #1976D2;
+}
+
+/* 历史记录样式 */
+.history-item {
+    background-color: #f8fbff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e3f2fd;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.history-details p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.delete-btn {
+    padding: 6px 12px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.delete-btn:hover {
+    background-color: #cc0000;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .modal-content {
+        background-color: #1e1e1e;
+    }
+
+    .modal-header,
+    .modal-tabs {
+        border-color: #333;
+        background-color: #1a2635;
+    }
+
+    .form-group label,
+    .history-header h3 {
+        color: #fff;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #fff;
+    }
+
+    .history-item {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
+
+    .history-details p {
+        color: #bbb;
+    }
+
+    .close-btn {
+        color: #fff;
+    }
+}
+
+/* 图片生成器样式 */
+.image-generator-content {
+    padding: 20px;
+}
+
+.image-generator-content textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.image-result {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.generated-image {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.loading-indicator {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.error-message {
+    color: #ff4444;
+    text-align: center;
+    padding: 20px;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .image-generator-content textarea {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #fff;
+    }
+
+    .loading-indicator {
+        color: #bbb;
+    }
+}
+
+/* 添加提示词显示样式 */
+.prompt-info {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #666;
+}
+
+@media (prefers-color-scheme: dark) {
+    .prompt-info {
+        background-color: #2d2d2d;
+        color: #bbb;
+    }
+}
+
+/* 添加餐食分析相关样式 */
+.food-analyzer-content {
+    padding: 20px;
+}
+
+.upload-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.upload-label {
+    display: inline-block;
+    padding: 15px 30px;
+    background-color: #f8fbff;
+    border: 2px dashed #2196F3;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+    background-color: #e3f2fd;
+}
+
+.upload-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.image-preview {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+}
+
+.food-info {
+    background-color: #f8fbff;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.food-info h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.calories {
+    font-size: 24px;
+    color: #ff6b6b;
+    margin: 10px 0;
+}
+
+.nutrition {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+    color: #666;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .upload-label {
+        background-color: #2d2d2d;
+        border-color: #2196F3;
+    }
+
+    .upload-label:hover {
+        background-color: #383838;
+    }
+
+    .food-info {
+        background-color: #2d2d2d;
+    }
+
+    .food-info h3 {
+        color: #fff;
+    }
+
+    .nutrition {
+        color: #bbb;
+    }
+}
+
+/* 添加模型选择器样式 */
+.model-selector {
+    margin-bottom: 20px;
+}
+
+.model-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.model-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.model-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.model-btn:hover {
+    background: #f0f0f0;
+}
+
+.model-btn.active:hover {
+    background: #0056b3;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .model-btn {
+        border-color: #2196F3;
+        color: #2196F3;
+    }
+
+    .model-btn:hover {
+        background-color: #1a2635;
+    }
+
+    .model-btn.active {
+        background-color: #2196F3;
+        color: white;
+    }
+}
+
+/* 添加样式选择样式 */
+.style-selector {
+    text-align: center;
+    margin: 15px 0;
+}
+
+.style-toggle {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.style-toggle input[type="checkbox"] {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.toggle-label {
+    color: #333;
+    font-size: 14px;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .toggle-label {
+        color: #fff;
+    }
+}
